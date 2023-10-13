@@ -171,7 +171,6 @@ cat lammps.pbs.o0
 
 ```
 ......
-
 Per MPI rank memory allocation (min/avg/max) = 3.777 | 3.801 | 3.818 Mbytes
 Step Temp E_pair E_mol TotEng Press 
            0         1.44   -6.7733681            0   -4.6134356   -5.0197073 
@@ -204,6 +203,7 @@ Neighbor list builds = 500
 Dangerous builds not checked
 Total wall time: 0:00:10
 ```
+
 2. 使用VNC可视化查看作业结果。
     1. 打开VNC。 控制台操作时系统会自动打开集群安全组 12016 端口。 
        1. 在[弹性高性能计算控制台](https://ehpc.console.aliyun.com)的左侧导航栏，单击**集群**。 
