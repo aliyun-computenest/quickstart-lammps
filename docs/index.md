@@ -134,41 +134,43 @@ LAMMPS社区版在计算巢部署的费用主要涉及：
 
 2.执行以下命令创建作业脚本文件，脚本文件命名为lammps.pbs。
 
-    ```
-    vim lammps.pbs
-    ```
-    
-    >以下示例使用1个计算节点的32 vCPU，使用32个MPI任务进行高性能计算。请根据实际计算节点规格配置vCPU数，算力要求vCPU≥32。
-    
-    作业脚本内容示例如下：
+```
+vim lammps.pbs
+```
 
-    \#!/bin/sh
+   >以下示例使用1个计算节点的32 vCPU，使用32个MPI任务进行高性能计算。请根据实际计算节点规格配置vCPU数，算力要求vCPU≥32。
 
-    \#PBS -l select=1:ncpus=32:mpiprocs=32
+作业脚本内容示例如下：
 
-    \#PBS -j oe
+\#!/bin/sh
 
-    export MODULEPATH=/opt/ehpcmodulefiles/   #module命令依赖的环境变量
+\#PBS -l select=1:ncpus=32:mpiprocs=32
 
-    module load lammps-openmpi/31Mar17
+\#PBS -j oe
 
-    module load openmpi/1.10.7
+export MODULEPATH=/opt/ehpcmodulefiles/   #module命令依赖的环境变量
 
-    echo "run at the beginning"
+module load lammps-openmpi/31Mar17
 
-    mpirun lmp -in ./lj.in                    #请根据实际修改lj.in文件的路径
+module load openmpi/1.10.7
+
+echo "run at the beginning"
+
+mpirun lmp -in ./lj.in                    #请根据实际修改lj.in文件的路径
+
 
 3.执行以下命令提交作业。
 
-    ```
-    qsub lammps.pbs
-    ```
+```
+qsub lammps.pbs
+```
 
-    预期返回如下，表示生成的作业ID为0.scheduler。
+预期返回如下，表示生成的作业ID为0.scheduler。
 
-    ```
-    0.scheduler
-    ```
+```
+0.scheduler
+```
+
 
 ### **步骤三：查看作业结果**
 
