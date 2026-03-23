@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="计算巢是阿里云开放给企业应用服务商的服务管理平台。服务商能够在计算巢上发布私有化部署服务，为其客户提供云上软件一键部署的能力；同时也支持全托管模式的服务，赋能服务商托管其客户资源。">
+  <title>LAMMPS Ehpc computing nest rapid deployment - Aliyun 计算巢 x Demo</title>
+
+  <link rel="shortcut icon" href="../img/favicon.ico">
+
+  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  
+
+  
+
+  
+  
+
+  
+    <script src="../search/main.js"></script>
+  
+
+  
+
+  <script src="../js/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="nav-inner">
+        <div class="logo">
+          <img src="./img/logo-2x.png">
+        </div>
+        <div class="nav-list">
+          <ul>
+          
+              <li><a href="#lammps-ehpc-computing-nest-rapid-deployment">LAMMPS Ehpc computing nest rapid deployment</a></li>
+              
+                  <li><a href="#overview">Overview</a></li>
+                  
+              
+                  <li><a href="#prerequisites">Prerequisites</a></li>
+                  
+              
+                  <li><a href="#billing-description">Billing Description</a></li>
+                  
+              
+                  <li><a href="#deployment-architecture">Deployment Architecture</a></li>
+                  
+              
+                  <li><a href="#parameter-description">Parameter description</a></li>
+                  
+              
+                  <li><a href="#deployment-process">Deployment process</a></li>
+                  
+              
+                  <li><a href="#use-process">Use process</a></li>
+                  
+                      <li class="li-h3"><a href="#step-1-connect-to-the-cluster-through-the-console">Step 1: Connect to the cluster through the console</a></li>
+                  
+                      <li class="li-h3"><a href="#step-2-submit-a-job">Step 2: Submit a Job</a></li>
+                  
+              
+          
+              <li><a href="#3d-lennard-jones-melt">3d Lennard-Jones melt</a></li>
+              
+          
+              <li><a href="#binsh">! /bin/sh</a></li>
+              
+          
+              <li><a href="#pbs-l-select1ncpus32mpiprocs32">PBS -l select=1:ncpus=32:mpiprocs=32</a></li>
+              
+          
+              <li><a href="#pbs-j-oe">PBS -j oe</a></li>
+              
+                  <li><a href="#step-3-view-job-results">Step 3: View Job Results</a></li>
+                  
+              
+          
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="content theme-github">
+      
+      <div class="content-inner">        
+        
+        <h1 id="lammps-ehpc-computing-nest-rapid-deployment">LAMMPS Ehpc computing nest rapid deployment</h1>
+<blockquote>
+<p><strong>Disclaimer:</strong> This service is provided by a third party. We try our best to ensure its safety, accuracy and reliability, but we cannot guarantee that it is completely free from failures, interruptions, errors or attacks. Therefore, the company hereby declares that it makes no representations, warranties or commitments regarding the content, accuracy, completeness, reliability, suitability and timeliness of the Service and is not liable for any direct or indirect loss or damage arising from your use of the Service; for third-party websites, applications, products and services that you access through the Service, do not assume any responsibility for its content, accuracy, completeness, reliability, applicability and timeliness, and you shall bear the risks and responsibilities of the consequences of use; for any loss or damage arising from your use of this service, including but not limited to direct loss, indirect loss, loss of profits, loss of goodwill, loss of data or other economic losses, even if we have been advised in advance of the possibility of such loss or damage; we reserve the right to amend this statement from time to time, so please check this statement regularly before using the Service. If you have any questions or concerns about this Statement or the Service, please contact us.</p>
+</blockquote>
+<h2 id="overview">Overview</h2>
+<p>LAMMPS(Large-scale Atomic/Molecular Massively Parallel Simulator) is a classic molecular dynamics software. LAMMPS contains potential functions that can be used in solid materials (metals, semiconductors), soft matter (biomacromolecules, polymers), coarse-grained or mesoscale model systems.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>To deploy a LAMMPS community edition service instance, you need to access and create some Alibaba Cloud resources. Therefore, your account must contain permissions for the following resources.
+<strong>Note</strong>: This permission is required only when your account is a RAM account.</p>
+<table>
+<thead>
+<tr>
+<th>Permission policy name</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AliyunECSFullAccess</td>
+<td>Permissions to manage ECS instances</td>
+</tr>
+<tr>
+<td>AliyunVPCFullAccess</td>
+<td>Permissions to manage a VPC</td>
+</tr>
+<tr>
+<td>AliyunROSFullAccess</td>
+<td>Manage permissions for Resource Orchestration Service (ROS)</td>
+</tr>
+<tr>
+<td>AliyunEHPCFullAccess</td>
+<td>Manage permissions for Elastic High Performance Computing (EHPC)</td>
+</tr>
+<tr>
+<td>AliyunNASFullAccess</td>
+<td>Manage NAS permissions</td>
+</tr>
+<tr>
+<td>AliyunComputeNestUserFullAccess</td>
+<td>Manage user-side permissions for the compute nest service (ComputeNest)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="billing-description">Billing Description</h2>
+<p>The cost of LAMMPS Community Edition deployment in Computing Nest mainly involves:</p>
+<p>-Elastic High Performance Computing Cluster (EHPC) fees
+-File system (NAS) fees
+-Traffic bandwidth charges</p>
+<h2 id="deployment-architecture">Deployment Architecture</h2>
+<p><img src="images-en/1.png" width="1500" height="700" align="bottom"/></p>
+<p>-deployment consists of an ehpc cluster, which includes manager nodes, schedule nodes, and compute nodes
+-The service uses nas-cpfs to build a high-performance shared file system</p>
+<h2 id="parameter-description">Parameter description</h2>
+<table>
+<thead>
+<tr>
+<th>Parameter group</th>
+<th>Parameter item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Service Instance</td>
+<td>Service Instance Name</td>
+<td>The service instance name must be no more than 64 characters in length and must start with an English letter. It can contain numbers, English letters, dashes (-), and underscores (_).</td>
+</tr>
+<tr>
+<td></td>
+<td>Region</td>
+<td>The region where the service instance is deployed</td>
+</tr>
+<tr>
+<td></td>
+<td>Billing Type</td>
+<td>Billing type of the resource: Pay-As-You-Go and Subscription</td>
+</tr>
+<tr>
+<td>EHPC Cluster Configuration</td>
+<td>Cluster Login Password</td>
+<td>8-30 in length and must contain three items (uppercase letters, lowercase letters, numbers, ()'~!@#$%^&amp; *-+ =</td>
+</tr>
+<tr>
+<td></td>
+<td>Ehpc Deployment Modes</td>
+<td>Tiny,Simple,Standard</td>
+</tr>
+<tr>
+<td></td>
+<td>Computing node instance type</td>
+<td>Computing node specifications available in the zone</td>
+</tr>
+<tr>
+<td></td>
+<td>Number of compute nodes</td>
+<td>Number of compute nodes, optional value: 1-99</td>
+</tr>
+<tr>
+<td></td>
+<td>Logon node instance type</td>
+<td>Logon node specifications available in the zone</td>
+</tr>
+<tr>
+<td></td>
+<td>Number of control nodes</td>
+<td>Number of control nodes, optional values: 1,2,4</td>
+</tr>
+<tr>
+<td>EHPC Cluster User Configuration</td>
+<td>The user password</td>
+<td>is 8-30 in length and must contain three items (uppercase letters, lowercase letters, numbers, ()~!@#$%^&amp; *-_+ =\</td>
+</tr>
+<tr>
+<td></td>
+<td>User name</td>
+<td>The user name used to log on to the cluster. The default value is lammps.</td>
+</tr>
+<tr>
+<td>Network Configuration</td>
+<td>Availability Zone</td>
+<td>The zone where the ECS instance is located</td>
+</tr>
+<tr>
+<td></td>
+<td>VPC ID</td>
+<td>The VPC where the resource resides</td>
+</tr>
+<tr>
+<td></td>
+<td>VSwitch ID</td>
+<td>VSwitch where the resource resides</td>
+</tr>
+</tbody>
+</table>
+<h2 id="deployment-process">Deployment process</h2>
+<ol>
+<li>
+<p>Visit Computing Nest LAMMPS Community Edition <a href="https://computenest.console.aliyun.com/user/cn-hangzhou/serviceInstanceCreate?&amp;ServiceId=service-199f5aeaf0f142918076">Deployment Link</a>
+, fill in the deployment parameters as prompted:
+<img alt="image.png" src="../images-en/2.png" /></p>
+</li>
+<li>
+<p>After completing the parameters, you can see the corresponding RFQ details. After confirming the parameters, click <strong>Next: Confirm Order</strong>.
+<img alt="image.png" src="../images-en/3.png" /></p>
+</li>
+<li>
+<p>Confirm the order and agree to the service agreement and click <strong>Create Now</strong>
+Enter the deployment phase.
+<img alt="image.png" src="../images-en/4.png" /></p>
+</li>
+</ol>
+<h2 id="use-process">Use process</h2>
+<h3 id="step-1-connect-to-the-cluster-through-the-console">Step 1: Connect to the cluster through the console</h3>
+<ol>
+<li>Log on to the <a href="https://ehpc.console.aliyun.com">Elastic High Performance Computing Console</a>.</li>
+<li>In the top-left corner of the menu bar, select a region.</li>
+<li>In the left-side navigation pane, click <strong>Clusters</strong>.</li>
+<li>
+<p>On the <strong>Clusters</strong> page, find the target cluster deployed in the computing nest and click <strong>Remote Connection</strong>.
+<img src="images-en/5.png" height="700" align="bottom"/></p>
+</li>
+<li>
+<p>On the <strong>Remote Connection</strong> page, enter the cluster username, login password, and port number, and click <strong>ssh Connection</strong>.</p>
+</li>
+</ol>
+<h3 id="step-2-submit-a-job"><strong>Step 2: Submit a Job</strong></h3>
+<p>This article describes how to use the E-HPC cluster to run LAMMPS open source simulation software, to 3d Lennard-Jones melt model for industrial simulation, and through the visual way to view the simulation results.</p>
+<ol>
+<li>Execute the following command to create a study file named lj.in.</li>
+</ol>
+<p>'''
+vim lj.in
+'''</p>
+<p>Example job script content is as follows:</p>
+<p>'''</p>
+<h1 id="3d-lennard-jones-melt">3d Lennard-Jones melt</h1>
+<p>variable x index 1
+variable y index 1
+variable z index 1</p>
+<p>variable xx equal 20<em>$x
+variable yy equal 20</em>$y
+variable zz equal 20*$z</p>
+<p>units lj
+atom_style atomic</p>
+<p>lattice fcc 0.8442
+region box block 0 ${xx} 0 ${yy} 0 ${zz}
+create_box 1 box
+create_atoms 1 box
+mass 1 1.0</p>
+<p>velocity all create 1.44 87287 loop geom</p>
+<p>pair_style lj/cut 2.5
+pair_coeff 1 1 1.0 1.0 2.5</p>
+<p>neighbor 0.3 bin
+neigh_modify delay 0 every 20 check no</p>
+<p>fix 1 all nve
+dump 1 all xyz 100 sample.xyz
+run 10000
+'''</p>
+<ol>
+<li>Run the following command to create a job script file. The script file is named lammps.pbs.</li>
+</ol>
+<p>'''
+vim lammps.pbs
+'''</p>
+<blockquote>
+<p>The following example uses 32 vCPUs on one compute node and 32 MPI tasks for high-performance computing. Please configure the number of vCPUs based on the actual computing node specifications, and the computing power must be vCPU≥ 32.</p>
+</blockquote>
+<p>Example job script content is as follows:</p>
+<p>'''</p>
+<h1 id="binsh">! /bin/sh</h1>
+<h1 id="pbs-l-select1ncpus32mpiprocs32">PBS -l select=1:ncpus=32:mpiprocs=32</h1>
+<h1 id="pbs-j-oe">PBS -j oe</h1>
+<p>export MODULEPATH =/opt/ehpcmodulefiles/# environment variables on which the module command depends
+module load lammps-openmpi/31Mar17
+module load openmpi/1.10.7</p>
+<p>echo "run at the beginning"
+mpirun lmp -in ./lj.in# Please modify the path of the lj.in file according to the actual situation
+'''</p>
+<ol>
+<li>Execute the following command to submit the job.</li>
+</ol>
+<p>'''
+qsub lammps.pbs
+'''</p>
+<p>The expected return is as follows, indicating that the generated job ID is scheduler.</p>
+<p>'''
+0.scheduler
+'''</p>
+<h3 id="step-3-view-job-results"><strong>Step 3: View Job Results</strong></h3>
+<ol>
+<li>Check the operation of the job.</li>
+</ol>
+<p>'''
+cat lammps.pbs.o0
+'''</p>
+<blockquote>
+<p>If you do not specify the job standard output path, the output file is generated according to the scheduler behavior by default. The default job result file output is/home/<user name>/directory. The job result file in this example is/home/testuser/lammps.pbs.o0.</p>
+</blockquote>
+<p>The expected return is as follows:</p>
+<p>'''
+......
+Per MPI rank memory allocation (min/avg/max) = 3.777 | 3.801 | 3.818 Mbytes
+Step Temp E_pair E_mol TotEng Press
+0 1.44 -6.7733681 0 -4.6134356 -5.0197073
+10000 0.69814375 -5.6683212 0 -4.6211383 0.75227555
+Loop time of 9.81493 on 32 procs for 10000 steps with 32000 atoms</p>
+<p>Performance: 440145.641 tau/day, 1018.856 timesteps/s
+97.0% CPU use with 32 MPI tasks x no OpenMP threads</p>
+<p>MPI task timing breakdown:
+|Section | min time | avg time | max time |%varavg| %total
+|---------------------------------------------------------------
+|Pair | 6.0055 | 6.1975 | 6.3645 | 4.0 | 63.14
+|Neigh | 0.90095 | 0.91322 | 0.92938 | 0.9 | 9.30
+|Comm | 2.1457 | 2.3105 | 2.4945 | 6.9 | 23.54
+|Output | 0.16934 | 0.1998 | 0.23357 | 4.3 | 2.04
+|Modify | 0.1259 | 0.13028 | 0.13602 | 0.8 | 1.33
+|Other | | 0.06364 | | | 0.65</p>
+<p>Nlocal: 1000 ave 1022 max 986 min
+Histogram: 5 3 6 3 4 4 2 2 1 2
+Nghost: 2705.62 ave 2733 max 2668 min
+Histogram: 1 1 0 3 7 5 4 5 4 2
+Neighs: 37505 ave 38906 max 36560 min
+Histogram: 7 3 2 4 5 2 3 3 2 1</p>
+<p>Total # of neighbors = 1200161
+Ave neighs/atom = 37.505
+Neighbor list builds = 500
+Dangerous builds not checked
+Total wall time: 0:00:10
+'''</p>
+<ol>
+<li>Use VNC to visualize the job results.</li>
+<li>Open VNC. The system automatically opens the cluster security group 12016 port during console operations.</li>
+<li>In the left-side navigation pane of the HPC console (https://ehpc.console.aliyun.com), click <strong>Clusters</strong>.</li>
+<li>On the <strong>Clusters</strong> page, find the target cluster and click <strong>More</strong>&gt; <strong>VNC</strong>.</li>
+<li>Use VNC remote connection visualization service. For more information, see <a href="https://help.aliyun.com/zh/e-hpc/user-guide/use-vnc-to-manage-a-visualization-service#section-bf6-eyn-edu">Connect Visualization Service</a>.</li>
+<li>In the VNC window, choose Application&gt;System Tools&gt;Terminal.</li>
+<li>Run '/opt/vmd/1.9.3/vmd' to open the VMD software.</li>
+<li>In the VMD Main dialog box, select <strong>File &gt; New Molecule...</strong>.</li>
+<li>Click <strong>Browse...</strong> in the <strong>Filename</strong> section and select the sample.xyz file.</li>
+<li>The sample.xyz file is located in the path/home/{user name}/sample.xyz.</li>
+<li>Click <strong>Load</strong> to view the visualization results in the <strong>VMD 1.9.3 OpenGL Display</strong> window.</li>
+</ol>
+<p><img src="images-en/7.png" height="800" align="bottom"/></p>
+        
+      </div>
+
+      <div class="copyrights">© 2009-2022 Aliyun.com 版权所有</div>
+    </div>
+  </div>
+  
+  <!--
+  MkDocs version      : 1.6.1
+  Docs Build Date UTC : 2026-03-23 08:08:58.795802+00:00
+  -->
+</body>
+</html>
